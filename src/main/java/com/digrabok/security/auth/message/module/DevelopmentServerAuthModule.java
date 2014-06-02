@@ -21,24 +21,28 @@ import java.util.Map;
  * <br />
  * In module properties you must set: <br />
  * <strong>login</strong> - property specify <em>remoteUser</em> (javax.servlet.http.HttpServletRequest#getRemoteUser) for each request.<br />
- * <strong>groupNames</strong> - property specify comma separated list of security groups for each request.
+ * <strong>groupNames</strong> - property specify list of security groups for each request.
+ * <strong>delimiter (optional)</strong> - property specify separator for <strong>groupNames</strong> (if not present, then comma - ",")
  */
 public class DevelopmentServerAuthModule implements ServerAuthModule {
     private static final String LOGIN_OPTION_NAME = "login";
     private static final String GROUP_NAMES_OPTION_NAME = "groupNames";
-    private static final String GROUP_NAMES_DELIMITER_OPTION_NAME = ",";
+    private static final String GROUP_NAMES_DELIMITER_OPTION_NAME = "delimiter";
 
     private static final Class[] SUPPORTED_MESSAGE_TYPES = { HttpServletRequest.class };
 
     private String[] parseGroups(String groupsString) {
-        groupsString = groupsString.trim().replaceAll("\\s*" + GROUP_NAMES_DELIMITER_OPTION_NAME + "\\s*", GROUP_NAMES_DELIMITER_OPTION_NAME);
-        return groupsString.split(GROUP_NAMES_DELIMITER_OPTION_NAME);
+        groupsString = groupsString.trim().replaceAll("\\s*" + this.delimiterString + "\\s*", this.delimiterString);
+        return groupsString.split(this.delimiterString);
     }
 
     @Override
     public void initialize(MessagePolicy requestPolicy, MessagePolicy responsePolicy, CallbackHandler handler, Map options) throws AuthException {
         this.callbackHandler = handler;
         this.login = (String) options.get(LOGIN_OPTION_NAME);
+        if (options.containsKey(GROUP_NAMES_DELIMITER_OPTION_NAME)) {
+            this.delimiterString = (String) options.get(GROUP_NAMES_DELIMITER_OPTION_NAME);
+        }
         this.groupNames = parseGroups((String) options.get(GROUP_NAMES_OPTION_NAME));
     }
 
@@ -90,4 +94,5 @@ public class DevelopmentServerAuthModule implements ServerAuthModule {
     private CallbackHandler callbackHandler;
     private String login;
     private String[] groupNames;
+    private String delimiterString = ",";
 }
